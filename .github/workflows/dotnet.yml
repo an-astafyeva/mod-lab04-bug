@@ -1,12 +1,9 @@
 name: .NET
 
-
 on: [push, pull_request]
 
-
 jobs:
- build:
-
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -14,10 +11,10 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: '9.x'
+        dotnet-version: '9.0'
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore ST-4.sln
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build ST-4.sln --no-restore
     - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet test ST-4.sln --no-build --verbosity normal
