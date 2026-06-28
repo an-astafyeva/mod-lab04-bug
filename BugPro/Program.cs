@@ -30,15 +30,12 @@ public enum BugTrigger
 public class Bug
 {
     private StateMachine<BugState, BugTrigger> _machine;
-    private BugState _currentState;
     
     public BugState CurrentState => _machine.State;
     
     public Bug()
     {
         _machine = new StateMachine<BugState, BugTrigger>(BugState.Open);
-        
-        // Настройка автомата состояний
         ConfigureMachine();
     }
     
@@ -127,8 +124,5 @@ class Program
         bug3.Fire(BugTrigger.Fix);
         bug3.Fire(BugTrigger.Reopen);
         Console.WriteLine($"Состояние после Reopen: {bug3.CurrentState}");
-        
-        Console.WriteLine("\nНажмите любую клавишу для выхода...");
-        Console.ReadKey();
     }
 }
