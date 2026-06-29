@@ -4,22 +4,24 @@ namespace BugPro;
 
 public enum BugState
 {
-    New,
-    Triaged,
+    Open,
+    Assigned,
+    InProgress,
     Fixed,
+    Verified,
     Closed,
     Reopened,
-    Deferred,
     Rejected
 }
 
 public enum BugTrigger
 {
-    Triage,
+    Assign,
+    StartProgress,
     Fix,
+    Verify,
     Close,
     Reopen,
-    Defer,
     Reject
 }
 
@@ -27,31 +29,50 @@ public class Bug
 {
     private readonly StateMachine<BugState, BugTrigger> _machine;
 
-    public BugState State => _machine.State;
+    public BugState CurrentState => _machine.State;
 
     public Bug()
     {
-        _machine = new StateMachine<BugState, BugTrigger>(BugState.New);
+        _machine = new StateMachine<BugState, BugTrigger>(BugState.Open);
 
-        _machine.Configure(BugState.New)
-            .Permit(BugTrigger.Triage, BugState.Triaged);
-
-        _machine.Configure(BugState.Triaged)
-            .Permit(BugTrigger.Fix, BugState.Fixed)
-            .Permit(BugTrigger.Defer, BugState.Deferred)
+        _machine.Configure(BugState.Open)
+            .Permit(BugTrigger.Assign, BugState.Assigned)
             .Permit(BugTrigger.Reject, BugState.Rejected);
 
+        _machine.Configure(BugState.Assigned)
+            .Permit(BugTrigger.StartProgress, BugState.InProgress)
+            .Permit(BugTrigger.Reject, BugState.Rejected);
+
+        _machine.Configure(BugState.InProgress)
+            .Permit(BugTrigger.Fix, BugState.Fixed);
+
         _machine.Configure(BugState.Fixed)
+            .Permit(BugTrigger.Verify, BugState.Verified)
+            .Permit(BugTrigger.Reopen, BugState.Reopened);
+
+        _machine.Configure(BugState.Verified)
             .Permit(BugTrigger.Close, BugState.Closed)
             .Permit(BugTrigger.Reopen, BugState.Reopened);
 
+        _machine.Configure(BugState.Closed)
+            .Permit(BugTrigger.Reopen, BugState.Reopened);
+
         _machine.Configure(BugState.Reopened)
-            .Permit(BugTrigger.Fix, BugState.Fixed);
+            .Permit(BugTrigger.Assign, BugState.Assigned);
+
+        _machine.Configure(BugState.Rejected)
+            .Permit(BugTrigger.Reopen, BugState.Reopened);
     }
 
     public void Fire(BugTrigger trigger)
     {
-        _machine.Fire(trigger);
+        if (_machine.CanFire(trigger))
+            _machine.Fire(trigger);
+    }
+
+    public bool CanFire(BugTrigger trigger)
+    {
+        return _machine.CanFire(trigger);
     }
 }
 
@@ -61,15 +82,21 @@ public class Program
     {
         var bug = new Bug();
 
-        Console.WriteLine($"Initial State: {bug.State}");
+        Console.WriteLine($"Initial State: {bug.CurrentState}");
 
-        bug.Fire(BugTrigger.Triage);
-        Console.WriteLine($"After Triage: {bug.State}");
+        bug.Fire(BugTrigger.Assign);
+        Console.WriteLine($"After Assign: {bug.CurrentState}");
+
+        bug.Fire(BugTrigger.StartProgress);
+        Console.WriteLine($"After StartProgress: {bug.CurrentState}");
 
         bug.Fire(BugTrigger.Fix);
-        Console.WriteLine($"After Fix: {bug.State}");
+        Console.WriteLine($"After Fix: {bug.CurrentState}");
+
+        bug.Fire(BugTrigger.Verify);
+        Console.WriteLine($"After Verify: {bug.CurrentState}");
 
         bug.Fire(BugTrigger.Close);
-        Console.WriteLine($"After Close: {bug.State}");
+        Console.WriteLine($"After Close: {bug.CurrentState}");
     }
 }
