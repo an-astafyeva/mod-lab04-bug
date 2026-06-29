@@ -1,4 +1,4 @@
-# МИПиС
+# МИПиС 
 ## mod-lab04-bug
 
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/UNN-IASR/mod-lab04-bug)
